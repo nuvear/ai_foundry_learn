@@ -1,11 +1,14 @@
 # Microsoft AI Foundry — AI DevTeam
-# Core Azure AI Foundry SDKs
-azure-ai-projects>=1.0.0b11
+# Core Azure AI Foundry SDKs (SDK 2.0+ uses endpoint URL, not connection string)
+azure-ai-projects>=2.0.0
 azure-ai-inference>=1.0.0b9
 azure-identity>=1.19.0
 
 # Azure AI Agents (Foundry Agent Service)
 azure-ai-agents>=1.0.0b5
+
+# OpenAI client (used via get_openai_client)
+openai>=1.0.0
 
 # Utilities
 python-dotenv>=1.0.0
