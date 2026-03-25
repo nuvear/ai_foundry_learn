@@ -15,15 +15,16 @@ This use case perfectly exercises Microsoft AI Foundry's advanced capabilities, 
 
 ### The Virtual Team
 
-| Agent Role | Responsibility | Artifacts Produced |
-| :--- | :--- | :--- |
-| **Project Manager (PM)** | The Orchestrator. Receives the user requirement, plans the workflow, assigns tasks to other agents, and tracks progress. | Project Charter, Status Updates |
-| **Business Analyst (BA)** | Clarifies the raw requirement and translates it into actionable development tasks. | Functional Requirements (FRD), User Stories |
-| **Architect** | Takes the requirements and designs the technical solution, selecting the stack and defining APIs. | High-Level Design (HLD), API Contracts |
-| **Solution Developer** | Writes the actual code based on the Architect's design and BA's user stories. | Source Code, Unit Tests, README |
-| **Tester** | Executes the code and runs tests against the Acceptance Criteria to ensure quality. | Test Plan, Bug Reports |
-| **Deployment Engineer** | Packages the tested code for deployment and writes infrastructure scripts. | Dockerfile, CI/CD YAML |
-| **QA / UAT Validator** | Performs final User Acceptance Testing from an end-user perspective before final sign-off. | UAT Report, Sign-off |
+| # | Agent Role | Responsibility | Artifacts Produced |
+| :--- | :--- | :--- | :--- |
+| 1 | **Project Manager (PM)** | The Orchestrator. Receives the user requirement, plans the workflow, assigns tasks to other agents, and tracks progress. | Project Charter, Status Updates |
+| 2 | **Business Analyst (BA)** | Clarifies the raw requirement and translates it into actionable development tasks. | Functional Requirements (FRD), User Stories, Acceptance Criteria |
+| 3 | **UI/UX Designer** | Translates user stories into wireframes, user flows, and component specifications. Defines accessibility requirements. | Wireframes, User Flows, Component Spec |
+| 4 | **Architect** | Takes the UX spec and requirements to design the technical solution, selecting the stack and defining APIs. | High-Level Design (HLD), API Contracts, Data Models |
+| 5 | **Solution Developer** | Writes the actual code based on the Architect's design, BA's user stories, and UX specifications. | Source Code, Unit Tests, README |
+| 6 | **Tester** | Executes the code and runs tests against both functional and UX Acceptance Criteria to ensure quality. | Test Plan, Bug Reports |
+| 7 | **Deployment Engineer** | Packages the tested code for deployment and writes infrastructure scripts. | Dockerfile, CI/CD YAML |
+| 8 | **QA / UAT Validator** | Performs final User Acceptance Testing from an end-user perspective before final sign-off. | UAT Report, Sign-off |
 
 ### Architecture Diagram
 
