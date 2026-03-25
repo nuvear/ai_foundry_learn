@@ -1,0 +1,13 @@
+# Microsoft AI Foundry — AI DevTeam
+# Core Azure AI Foundry SDKs
+azure-ai-projects>=1.0.0b11
+azure-ai-inference>=1.0.0b9
+azure-identity>=1.19.0
+
+# Azure AI Agents (Foundry Agent Service)
+azure-ai-agents>=1.0.0b5
+
+# Utilities
+python-dotenv>=1.0.0
+rich>=13.7.0
+pydantic>=2.7.0

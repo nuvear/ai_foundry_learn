@@ -1,0 +1,17 @@
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment secrets — NEVER commit this
+ai_devteam/.env
+
+# Outputs (generated artifacts from agents)
+ai_devteam/outputs/
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
