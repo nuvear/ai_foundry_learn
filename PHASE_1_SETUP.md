@@ -52,19 +52,28 @@ git clone https://github.com/nuvear/ai_foundry_learn.git
 cd ai_foundry_learn/ai_devteam
 ```
 
-### 2. Create a Virtual Environment
+### 2. Verify Your Python Version
+On macOS, the command is `python3` (not `python`). Confirm you have Python 3.10 or higher:
+```bash
+python3 --version
+# Expected: Python 3.10.x or higher
+```
+If Python is not installed, download it from [python.org](https://www.python.org/downloads/).
+
+### 3. Create a Virtual Environment
 It is best practice to isolate project dependencies.
 ```bash
-python -m venv .venv
-
-# On Windows:
-.venv\Scripts\activate
-
-# On macOS/Linux:
+# macOS / Linux — use python3
+python3 -m venv .venv
 source .venv/bin/activate
-```
 
-### 3. Install Dependencies
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+```
+Once activated, your terminal prompt will show `(.venv)` at the start.
+
+### 4. Install Dependencies
 Install the Microsoft AI Foundry SDKs and other required packages:
 ```bash
 pip install -r requirements.txt
