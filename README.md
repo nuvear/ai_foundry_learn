@@ -1,24 +1,48 @@
-# Microsoft AI Foundry: Hands-On Project Builder Syllabus
+# Microsoft AI Foundry: Hands-On Project Builder
 
 **Author:** Manus AI  
 **Last Updated:** March 2026  
 
 ## Overview
 
-This syllabus is designed for developers who prefer **learning by building**. We are stripping away the theory-heavy certification tracks in favor of a 100% hands-on, project-driven approach to mastering **Microsoft AI Foundry**. 
+This repository is a 100% hands-on, project-driven guide to mastering **Microsoft AI Foundry**. Instead of isolated labs, we are building a complete, production-ready AI application from scratch. As we build each feature, we naturally learn the corresponding Microsoft AI Foundry capabilities—from deploying models and building agents to implementing multi-agent orchestration and observability.
 
-Instead of isolated labs, we will build a complete, production-ready AI application from scratch. As we build each feature, we will naturally learn the corresponding Microsoft AI Foundry capabilities—from deploying models and building agents to implementing Retrieval-Augmented Generation (RAG) and observability. I (Manus) will act as your pair programmer, providing code support, debugging, and architectural guidance along the way.
+## The Project: "AI DevTeam" (Multi-Agent Product Development)
+
+We are building a **virtual product development team** where each role is a specialized AI agent. You provide a raw user requirement (e.g., "Build a weather dashboard app"), and the agents coordinate to gather requirements, design the architecture, write the code, test it, deploy it, and validate it.
+
+This use case perfectly exercises Microsoft AI Foundry's advanced capabilities, specifically the **Foundry Agent Service** and **Multi-Agent Orchestration**.
+
+### The Virtual Team
+
+| Agent Role | Responsibility | Artifacts Produced |
+| :--- | :--- | :--- |
+| **Project Manager (PM)** | The Orchestrator. Receives the user requirement, plans the workflow, assigns tasks to other agents, and tracks progress. | Project Charter, Status Updates |
+| **Business Analyst (BA)** | Clarifies the raw requirement and translates it into actionable development tasks. | Functional Requirements (FRD), User Stories |
+| **Architect** | Takes the requirements and designs the technical solution, selecting the stack and defining APIs. | High-Level Design (HLD), API Contracts |
+| **Solution Developer** | Writes the actual code based on the Architect's design and BA's user stories. | Source Code, Unit Tests, README |
+| **Tester** | Executes the code and runs tests against the Acceptance Criteria to ensure quality. | Test Plan, Bug Reports |
+| **Deployment Engineer** | Packages the tested code for deployment and writes infrastructure scripts. | Dockerfile, CI/CD YAML |
+| **QA / UAT Validator** | Performs final User Acceptance Testing from an end-user perspective before final sign-off. | UAT Report, Sign-off |
+
+### Architecture Diagram
+
+![AI DevTeam Architecture](architecture.png)
+
+*(See `design_notes.md` for a detailed breakdown of agent interactions and tool usage).*
+
+---
 
 ## The Learning Strategy: "Learn as You Build"
 
-Our learning journey is structured around the software development lifecycle of a single, comprehensive AI project.
+Our learning journey is structured around the software development lifecycle of the AI DevTeam project.
 
 | Phase | Development Stage | AI Foundry Skills Acquired |
 | :--- | :--- | :--- |
 | **Phase 1** | Project Initialization & Infrastructure | Navigating the Foundry Portal, setting up projects, Role-Based Access Control (RBAC). |
 | **Phase 2** | Core Intelligence (The "Brain") | Deploying models from the Model Catalog (OpenAI, DeepSeek, etc.), using the Foundry SDK (Python/C#). |
-| **Phase 3** | Knowledge Integration (The "Memory") | Implementing RAG, vector search, and Foundry IQ to ground the AI in custom enterprise data. |
-| **Phase 4** | Agentic Workflows (The "Hands") | Using the Foundry Agent Service, Model Context Protocol (MCP), and multi-agent orchestration to perform actions. |
+| **Phase 3** | Single Agent Setup & Tools | Creating the first agent (e.g., Developer) and equipping it with MCP tools (File System, Code Runner). |
+| **Phase 4** | Multi-Agent Orchestration | Implementing the PM Orchestrator and defining the handoff logic between the BA, Architect, and Developer. |
 | **Phase 5** | Production Readiness (The "Guardrails") | Implementing tracing (OpenTelemetry), Agent Monitoring Dashboard, and Azure AI Content Safety. |
 
 ---
@@ -27,11 +51,9 @@ Our learning journey is structured around the software development lifecycle of 
 
 Before writing code, we need a solid foundation. In this phase, we will set up our cloud environment and establish our local development workspace.
 
-| Task | Description |
-| :--- | :--- |
-| **Environment Setup** | Create an Azure account and deploy a new Microsoft AI Foundry project workspace. |
-| **Local Workspace** | Initialize a local Git repository, set up a Python/C# virtual environment, and install the `azure-ai-projects` and `azure-ai-inference` SDKs. |
-| **Authentication** | Configure Azure CLI and set up secure, keyless authentication (DefaultAzureCredential) for local development. |
+1.  **Environment Setup:** Create an Azure account and deploy a new Microsoft AI Foundry project workspace.
+2.  **Local Workspace:** Initialize a local Git repository, set up a Python virtual environment, and install the `azure-ai-projects` and `azure-ai-inference` SDKs.
+3.  **Authentication:** Configure Azure CLI and set up secure, keyless authentication (`DefaultAzureCredential`) for local development.
 
 ---
 
@@ -39,37 +61,29 @@ Before writing code, we need a solid foundation. In this phase, we will set up o
 
 An AI application needs a brain. We will explore the Model Catalog and write our first lines of code to interact with a Large Language Model (LLM).
 
-| Task | Description |
-| :--- | :--- |
-| **Model Selection** | Browse the Foundry Model Catalog and deploy a foundation model (e.g., GPT-4o or DeepSeek-R1) as a serverless API endpoint. |
-| **Basic Inference** | Write a simple script using the Foundry SDK to send a prompt to the deployed model and receive a response. |
-| **System Prompts** | Learn how to craft system prompts to define the persona, tone, and boundaries of our AI application. |
+1.  **Model Selection:** Browse the Foundry Model Catalog and deploy a foundation model (e.g., GPT-4o) as a serverless API endpoint.
+2.  **Basic Inference:** Write a simple script using the Foundry SDK to send a prompt to the deployed model and receive a response.
+3.  **System Prompts:** Learn how to craft system prompts to define the persona and tone of our first agent.
 
 ---
 
-## Phase 3: Knowledge Integration (RAG & Foundry IQ)
+## Phase 3: Single Agent Setup & Tools
 
-LLMs only know what they were trained on. To make our application useful, we need to give it access to custom data without retraining the model.
+An AI that only chats is limited. We will upgrade our application into an "Agent" that can take actions, starting with the **Solution Developer Agent**.
 
-| Task | Description |
-| :--- | :--- |
-| **Data Ingestion** | Upload sample project data (documents, PDFs, or code) to Azure Blob Storage. |
-| **Vector Indexing** | Create an Azure AI Search resource and generate vector embeddings for our custom data. |
-| **Implementing RAG** | Modify our inference code to query the search index first, retrieve relevant context, and append it to the prompt before sending it to the LLM. |
-| **Foundry IQ (Optional)** | Explore using Foundry IQ as an enterprise intelligence layer to connect directly to SharePoint or OneLake. |
+1.  **Defining Tools:** Create Python functions that perform specific tasks (e.g., writing files to disk, running a Python script in a sandbox).
+2.  **Agent Orchestration:** Use the Foundry Agent Service to bind our deployed model with the tools we created.
+3.  **Model Context Protocol (MCP):** Implement an MCP server to standardize how our Developer agent interacts with the local file system and GitHub.
 
 ---
 
-## Phase 4: Agentic Workflows & Tools
+## Phase 4: Multi-Agent Orchestration
 
-An AI that only chats is limited. We will upgrade our application into an "Agent" that can take actions, use tools, and execute multi-step workflows.
+This is the core of the project. We will build the rest of the team and establish the communication pipeline.
 
-| Task | Description |
-| :--- | :--- |
-| **Defining Tools** | Create Python/C# functions that perform specific tasks (e.g., querying a database, fetching weather, or calling an external API). |
-| **Agent Orchestration** | Use the Foundry Agent Service to bind our deployed model with the tools we created. |
-| **Model Context Protocol (MCP)** | Implement an MCP server to standardize how our agent interacts with external tools and data sources. |
-| **Multi-Agent Setup** | (Advanced) Create a workflow where two different agents (e.g., a "Researcher" and a "Writer") collaborate to solve a complex task. |
+1.  **Agent Creation:** Instantiate the PM, BA, Architect, Tester, Deployment Engineer, and QA agents using the Foundry SDK.
+2.  **The Orchestrator Pattern:** Program the PM Agent to act as the router, taking the output from one agent (e.g., BA's User Stories) and passing it as input to the next (e.g., Architect).
+3.  **Feedback Loops:** Implement logic so the Tester Agent can send bug reports back to the Developer Agent for fixing before passing the code to Deployment.
 
 ---
 
@@ -77,17 +91,12 @@ An AI that only chats is limited. We will upgrade our application into an "Agent
 
 Before calling a project "done," we must ensure it is safe, reliable, and easy to debug.
 
-| Task | Description |
-| :--- | :--- |
-| **Tracing** | Integrate OpenTelemetry into our code to log every LLM call, tool execution, and latency metric to the Foundry portal. |
-| **Monitoring Dashboard** | Navigate the Agent Monitoring Dashboard in Foundry to visualize token usage and execution traces. |
-| **Content Safety** | Implement Azure AI Content Safety guardrails to automatically detect and block jailbreak attempts, hate speech, or sensitive data leaks. |
-| **Evaluation** | Run automated evaluations against our RAG implementation to measure relevance, groundedness, and completeness. |
+1.  **Tracing:** Integrate OpenTelemetry into our code to log every LLM call, tool execution, and agent handoff to the Foundry portal.
+2.  **Monitoring Dashboard:** Navigate the Agent Monitoring Dashboard in Foundry to visualize token usage and execution traces across our 7-agent team.
+3.  **Content Safety:** Implement Azure AI Content Safety guardrails to automatically detect and block malicious prompts or generated code that contains security vulnerabilities.
 
 ---
 
-## Next Steps: Choose Your Use Case
+## Next Steps
 
-To begin, we need to define **what** we are building. The best projects are ones that solve a real problem or align with your interests. 
-
-*(See the discussion thread to select a use case, or propose your own!)*
+We are ready to begin **Phase 1**. When you are ready, let's start setting up the Azure AI Foundry workspace and local Python environments.

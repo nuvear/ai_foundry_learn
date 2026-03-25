@@ -1,0 +1,49 @@
+flowchart TD
+    USER(["👤 User\nRequirement"]):::user
+
+    subgraph FOUNDRY["Microsoft AI Foundry — Multi-Agent Product Development Team"]
+        direction TB
+
+        PM["🗂️ Project Manager Agent\n(Orchestrator)\n─────────────────\nPlans, assigns tasks,\ntracks progress,\nreports to user"]:::pm
+
+        BA["📋 Business Analyst Agent\n─────────────────\nFunctional Requirements Doc\nUser Stories\nAcceptance Criteria"]:::agent
+
+        ARCH["🏛️ Architect Agent\n─────────────────\nHigh-Level Design\nTech Stack\nAPI Contracts"]:::agent
+
+        DEV["💻 Solution Developer Agent\n─────────────────\nCode Generation\nUnit Tests\nREADME"]:::agent
+
+        TEST["🧪 Tester Agent\n─────────────────\nTest Plan & Cases\nTest Execution\nBug Reports"]:::agent
+
+        DEPLOY["🚀 Deployment Engineer Agent\n─────────────────\nDockerfile / CI-CD\nAzure Deployment\nEnv Config"]:::agent
+
+        QA["✅ QA / UAT Validator Agent\n─────────────────\nEnd-User Simulation\nUAT Report\nSign-off / Rejection"]:::agent
+    end
+
+    subgraph TOOLS["Foundry Tools & Services"]
+        direction LR
+        MC["📦 Model Catalog\nGPT-4o / DeepSeek"]:::tool
+        MCP_T["🔌 MCP Tools\nGitHub · Code Runner\nAzure CLI · File System"]:::tool
+        IQ["🧠 Foundry IQ\nCoding Standards\nDesign Patterns KB"]:::tool
+        OBS["📡 Observability\nTracing · Monitoring\nContent Safety"]:::tool
+    end
+
+    USER -->|"Raw Requirement"| PM
+    PM -->|"Requirements Brief"| BA
+    BA -->|"FRD + User Stories"| ARCH
+    ARCH -->|"HLD + API Contracts"| DEV
+    DEV -->|"Code + Unit Tests"| TEST
+    TEST -->|"Tested Artifact"| DEPLOY
+    DEPLOY -->|"Deployed App"| QA
+    QA -->|"UAT Report"| PM
+    PM -->|"Final Delivery"| USER
+
+    TEST -.->|"Bug Report"| DEV
+    QA -.->|"UAT Failure"| DEV
+    BA -.->|"Clarification"| PM
+
+    FOUNDRY --- TOOLS
+
+    classDef user fill:#1a1a2e,color:#e0e0e0,stroke:#4a90d9,stroke-width:2px
+    classDef pm fill:#16213e,color:#e0e0e0,stroke:#f5a623,stroke-width:3px
+    classDef agent fill:#0f3460,color:#e0e0e0,stroke:#4a90d9,stroke-width:2px
+    classDef tool fill:#1b4332,color:#e0e0e0,stroke:#52b788,stroke-width:2px
