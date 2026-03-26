@@ -20,11 +20,6 @@ from typing import Dict, List, Optional
 
 from azure.identity import DefaultAzureCredential
 from azure.ai.projects import AIProjectClient
-from azure.ai.inference.models import (
-    SystemMessage,
-    UserMessage,
-    AssistantMessage,
-)
 
 from shared.config import config
 
@@ -102,8 +97,9 @@ class BaseAgent:
         # Conversation history (list of message dicts for multi-turn)
         self._history: List[Dict] = []
 
-        # Lazy-initialised Foundry client
+        # Lazy-initialised clients
         self._client: Optional[AIProjectClient] = None
+        self._openai_client = None
 
         # Ensure output directory exists
         self._output_dir = Path(config.OUTPUTS_DIR) / role
@@ -178,6 +174,12 @@ class BaseAgent:
             )
         return self._client
 
+    def _get_openai_client(self):
+        """Lazily initialise and return the OpenAI-compatible client via Foundry."""
+        if self._openai_client is None:
+            self._openai_client = self._get_client().get_openai_client()
+        return self._openai_client
+
     def _load_prompt(self, prompt_file: str) -> str:
         """Load the system prompt from the prompts directory."""
         prompt_path = Path(__file__).parent.parent / "prompts" / prompt_file
@@ -190,25 +192,21 @@ class BaseAgent:
 
     def _build_messages(self, user_input: str) -> List:
         """Construct the full message list for the API call."""
-        messages = [SystemMessage(content=self.system_prompt)]
+        messages = [{"role": "system", "content": self.system_prompt}]
 
         # Replay conversation history
         for msg in self._history:
-            if msg["role"] == "user":
-                messages.append(UserMessage(content=msg["content"]))
-            elif msg["role"] == "assistant":
-                messages.append(AssistantMessage(content=msg["content"]))
+            messages.append({"role": msg["role"], "content": msg["content"]})
 
         # Add the new user message
-        messages.append(UserMessage(content=user_input))
+        messages.append({"role": "user", "content": user_input})
         return messages
 
     def _call_model(self, messages: List) -> str:
         """Send messages to the deployed model and return the text response."""
-        client = self._get_client()
-        chat_client = client.inference.get_chat_completions_client()
+        openai_client = self._get_openai_client()
 
-        response = chat_client.complete(
+        response = openai_client.chat.completions.create(
             model=self.model_deployment,
             messages=messages,
             temperature=self.temperature,
