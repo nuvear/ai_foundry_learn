@@ -25,6 +25,7 @@ _VERDICT_MAP = {
     "REJECTED":  "REJECTED",
     "COMPLETE":  "PASS",
     "INITIATED": "PASS",
+    "SIGNED":    "PASS",   # UAT Validator: "SIGNED OFF — Delivery to User"
     "PASS":      "PASS",
     "FAIL":      "FAIL",
     "FAILED":    "FAIL",
@@ -59,13 +60,19 @@ def parse_verdict(agent_output: str) -> Verdict:
     - UNKNOWN → treat as FAIL and log a warning
     """
     match = _STATUS_PATTERN.search(agent_output)
-    if not match:
-        match = _STANDALONE_VERDICT_PATTERN.search(agent_output)
-        if not match:
-            return "UNKNOWN"
+    if match:
+        keyword = match.group(1).upper()
+        verdict = _VERDICT_MAP.get(keyword)
+        if verdict is not None:
+            return verdict
+        # Status line token not recognised — fall through to standalone check.
 
-    keyword = match.group(1).upper()
-    return _VERDICT_MAP.get(keyword, "UNKNOWN")
+    match = _STANDALONE_VERDICT_PATTERN.search(agent_output)
+    if match:
+        keyword = match.group(1).upper()
+        return _VERDICT_MAP.get(keyword, "UNKNOWN")
+
+    return "UNKNOWN"
 
 
 def extract_bug_summary(tester_output: str) -> str:
