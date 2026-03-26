@@ -1,0 +1,67 @@
+{
+  "requirement": "Build a simple todo list REST API where users can create, read, update, and delete tasks. Include authentication with JWT tokens.",
+  "workspace": "/home/ubuntu/ai_foundry_learn/ai_devteam/workspaces/build_a_simple_todo_list_rest_api_where_20260326_034705",
+  "status": "complete",
+  "max_retries": 5,
+  "started_at": "2026-03-26T07:47:05.212969+00:00",
+  "agents": {
+    "project_manager": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "business_analyst": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "ux_designer": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "architect": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "developer": {
+      "status": "failed",
+      "retries": 1,
+      "verdict": "FAIL",
+      "pending_feedback": "**BUG-001: Expired JWT causes 500 Internal Server Error**  \n- **Severity:** High  \n- **User Story:** US-007  \n- **Steps to Reproduce:**  \n  1. Obtain a valid JWT token.  \n  2. Wait for the token to expire.  \n  3. Attempt to access any protected endpoint using the expired token.  \n- **Expected:** 401 Unauthorized, error message.  \n- **Actual:** 500 Internal Server Error.  \n- **Assigned to:** Solution Developer  \n\n**BUG-002: Invalid JWT causes 500 Internal Server Error**  \n- **Severity:** High  \n- **User Story:** US-007  \n- **Steps to Reproduce:**  \n  1. Use an invalid JWT token (e.g., tampered signature).  \n  2. Attempt to access any protected endpoint using the invalid token.  \n- **Expected:** 401 Unauthorized, error message.  \n- **Actual:** 500 Internal Server Error.  \n- **Assigned to:** Solution Developer  \n\n---"
+    },
+    "tester": {
+      "status": "failed",
+      "retries": 1,
+      "verdict": "REJECTED",
+      "pending_feedback": null
+    },
+    "deployment_engineer": {
+      "status": "pending",
+      "retries": 0,
+      "verdict": null,
+      "pending_feedback": null
+    },
+    "uat_validator": {
+      "status": "pending",
+      "retries": 0,
+      "verdict": null,
+      "pending_feedback": null
+    }
+  },
+  "loops": [
+    {
+      "iteration": 1,
+      "trigger": "tester",
+      "verdict": "REJECTED",
+      "routed_to": "developer",
+      "timestamp": "2026-03-26T07:49:19.440078+00:00"
+    }
+  ],
+  "pending_resume": {}
+}

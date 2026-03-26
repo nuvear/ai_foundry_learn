@@ -1,0 +1,1 @@
+Build a simple todo list REST API where users can create, read, update, and delete tasks. Include authentication with JWT tokens.

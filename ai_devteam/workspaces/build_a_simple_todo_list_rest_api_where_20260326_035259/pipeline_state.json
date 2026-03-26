@@ -1,0 +1,67 @@
+{
+  "requirement": "Build a simple todo list REST API where users can create, read, update, and delete tasks. Include authentication with JWT tokens.",
+  "workspace": "/home/ubuntu/ai_foundry_learn/ai_devteam/workspaces/build_a_simple_todo_list_rest_api_where_20260326_035259",
+  "status": "complete",
+  "max_retries": 5,
+  "started_at": "2026-03-26T07:52:59.097345+00:00",
+  "agents": {
+    "project_manager": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "business_analyst": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "ux_designer": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "architect": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "developer": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "tester": {
+      "status": "complete",
+      "retries": 1,
+      "verdict": "APPROVED",
+      "pending_feedback": null
+    },
+    "deployment_engineer": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    },
+    "uat_validator": {
+      "status": "complete",
+      "retries": 0,
+      "verdict": "PASS",
+      "pending_feedback": null
+    }
+  },
+  "loops": [
+    {
+      "iteration": 1,
+      "trigger": "tester",
+      "verdict": "REJECTED",
+      "routed_to": "developer",
+      "timestamp": "2026-03-26T07:55:22.217089+00:00"
+    }
+  ],
+  "pending_resume": {}
+}
