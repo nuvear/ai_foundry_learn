@@ -14,6 +14,7 @@ Design: Azure Blueprint / Technical Documentation Elevated
 from __future__ import annotations
 
 import json
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -183,6 +184,15 @@ class OrchestratorPM(ProjectManagerAgent):
 
             # Parse the verdict
             verdict = parse_verdict(response.content)
+
+            # Hardening gate: if Developer has pending tester feedback, it must
+            # explicitly acknowledge all BUG IDs before a pass can be accepted.
+            if current_key == "developer" and verdict in ("PASS", "COMPLETE", "APPROVED", "UNKNOWN"):
+                pending_feedback = agent_state.get("pending_feedback")
+                if pending_feedback and not self._developer_acknowledged_feedback(response.content, pending_feedback):
+                    print("  ⚠️  Developer output did not acknowledge all pending BUG IDs — forcing retry.")
+                    verdict = "FAIL"
+
             print(f"  🔍 Verdict: {verdict}")
 
             if verdict in ("PASS", "COMPLETE", "APPROVED", "UNKNOWN"):
@@ -191,6 +201,11 @@ class OrchestratorPM(ProjectManagerAgent):
                 if verdict == "UNKNOWN":
                     print(f"  ⚠️  Could not parse verdict from {step['label']} — advancing.")
                 self._update_agent_state(current_key, "complete", verdict)
+
+                # Developer resolved feedback successfully; clear pending bugs.
+                if current_key == "developer":
+                    agent_state["pending_feedback"] = None
+
                 current_key = step["routes_to"]
 
             elif verdict in ("FAIL", "REJECTED"):
@@ -295,6 +310,20 @@ class OrchestratorPM(ProjectManagerAgent):
         if feedback:
             return base_input + f"\n\n---\n\n## Tester Feedback — Fix Required\n{feedback}"
         return base_input
+
+    def _developer_acknowledged_feedback(self, developer_output: str, pending_feedback: str) -> bool:
+        """
+        Ensure Developer acknowledges every pending BUG ID before pass-through.
+        """
+        required_bug_ids = set(re.findall(r"BUG-\d+", pending_feedback, flags=re.IGNORECASE))
+        if not required_bug_ids:
+            return True
+
+        output_bug_ids = set(re.findall(r"BUG-\d+", developer_output, flags=re.IGNORECASE))
+        if not required_bug_ids.issubset(output_bug_ids):
+            return False
+
+        return "bug fix summary" in developer_output.lower()
 
     # ── Output helpers ────────────────────────────────────────────────────────
 
