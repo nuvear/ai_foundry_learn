@@ -192,6 +192,11 @@ class OrchestratorPM(ProjectManagerAgent):
                 if pending_feedback and not self._developer_acknowledged_feedback(response.content, pending_feedback):
                     print("  ⚠️  Developer output did not acknowledge all pending BUG IDs — forcing retry.")
                     verdict = "FAIL"
+                    # Quality-gate failures do NOT consume a retry slot — the
+                    # Developer simply needs to reformat its output, not produce
+                    # entirely new logic. Decrement here so the increment below
+                    # nets to zero for this gate-only failure.
+                    agent_state["retries"] -= 1
 
             print(f"  🔍 Verdict: {verdict}")
 
@@ -219,6 +224,7 @@ class OrchestratorPM(ProjectManagerAgent):
                 # Record the failure and decide where to route
                 agent_state["retries"] += 1
                 self._update_agent_state(current_key, "failed", verdict)
+                self._state["last_failure"] = {"agent": current_key, "verdict": verdict}
 
                 if step["fail_routes_to"] is not None:
                     # Route back to the responsible agent (e.g. Tester → Developer)
@@ -259,9 +265,22 @@ class OrchestratorPM(ProjectManagerAgent):
 
         # ── Final delivery report ─────────────────────────────────────────────
         if self._state["status"] != "escalated":
-            self._state["status"] = "complete"
-            self._save_state()
-            self._print_delivery_report()
+            # Check if the pipeline exited with an unresolved quality-gate failure
+            last_failure = self._state.get("last_failure", {})
+            dev_state = self._state["agents"].get("developer", {})
+            pipeline_incomplete = (
+                last_failure.get("agent") == "developer"
+                and dev_state.get("pending_feedback")
+                and dev_state.get("status") != "complete"
+            )
+            if pipeline_incomplete:
+                self._state["status"] = "incomplete"
+                self._save_state()
+                self._print_incomplete_report()
+            else:
+                self._state["status"] = "complete"
+                self._save_state()
+                self._print_delivery_report()
 
         return self._workspace
 
@@ -354,7 +373,17 @@ class OrchestratorPM(ProjectManagerAgent):
             return False
 
         # Require explicit Before/After evidence somewhere in the output.
-        if not re.search(r"\bBefore\b.{0,600}\bAfter\b", developer_output, re.DOTALL | re.IGNORECASE):
+        # Accept multiple formats the LLM may produce:
+        #   **BUG-1 — Before:**  /  Before:  /  ### Before  /  **Before**
+        has_before = re.search(
+            r"(?:before\s*[:\-]|\*\*before\*\*|###\s*before)",
+            developer_output, re.IGNORECASE
+        )
+        has_after = re.search(
+            r"(?:after\s*[:\-]|\*\*after\*\*|###\s*after)",
+            developer_output, re.IGNORECASE
+        )
+        if not (has_before and has_after):
             return False
 
         # Require at least one fenced code block.
@@ -409,6 +438,30 @@ class OrchestratorPM(ProjectManagerAgent):
         print(f"\n  Requirement : {requirement[:80]}")
         print(f"  Workspace   : {self._workspace.path}")
         print(f"  Max retries : {self.max_retries} per agent")
+
+    def _print_incomplete_report(self) -> None:
+        """Print a clear INCOMPLETE notice when the Developer failed the quality gate."""
+        loops = self._state["loops"]
+        dev_state = self._state["agents"].get("developer", {})
+        print("\n" + "=" * 62)
+        print("  ⚠️   PIPELINE INCOMPLETE — Developer quality gate not met")
+        print("=" * 62)
+        print(f"\n  Workspace : {self._workspace.path}")
+        print(f"  Loops     : {len(loops)} feedback loop(s) occurred")
+        if loops:
+            for loop in loops:
+                print(f"    • Loop {loop['iteration']}: "
+                      f"{loop['trigger']} → {loop['routed_to']} "
+                      f"({loop['verdict']})")
+        print()
+        print("  The Developer's Bug Fix Summary did not include:")
+        print("    ✗  All pending BUG-IDs acknowledged")
+        print("    ✗  Explicit Before: / After: code evidence for each bug")
+        print("    ✗  At least one fenced code block (```...```)")
+        print()
+        print("  To resolve, re-run the pipeline with a higher --max-retries value:")
+        print(f"    python run_orchestrated.py --requirement \"...\" --max-retries 8")
+        print(f"{'=' * 62}\n")
 
     def _print_delivery_report(self) -> None:
         loops = self._state["loops"]
