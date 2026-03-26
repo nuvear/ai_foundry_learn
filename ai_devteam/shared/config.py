@@ -7,53 +7,58 @@ them as a typed Config object used by every agent.
 """
 
 import os
-from dataclasses import dataclass
+from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env file from the project root (ai_devteam directory)
-load_dotenv()
+# Load .env file from the ai_devteam directory
+load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
 
 
-@dataclass
 class Config:
     """Typed configuration for the AI DevTeam project."""
 
-    # Microsoft AI Foundry project connection string
-    connection_string: str
+    def __init__(self):
+        required = {
+            "AIPROJECT_CONNECTION_STRING": "Your Foundry project endpoint URL (https://...)",
+            "MODEL_DEPLOYMENT_NAME": "The name of your deployed model (e.g. gpt-4o)",
+            "AZURE_SUBSCRIPTION_ID": "Your Azure subscription ID",
+            "AZURE_RESOURCE_GROUP": "Your Azure resource group name",
+        }
 
-    # Name of the deployed model in Foundry (e.g. "gpt-4o")
-    model_deployment_name: str
+        missing = [key for key in required if not os.getenv(key)]
+        if missing:
+            lines = "\n".join(
+                f"  - {key}: {required[key]}" for key in missing
+            )
+            raise EnvironmentError(
+                f"\n\nMissing required environment variables:\n{lines}\n\n"
+                "Copy ai_devteam/.env.example to ai_devteam/.env and fill in your values.\n"
+                "Then run: az login"
+            )
 
-    # Azure subscription details (used by Deployment Engineer agent)
-    azure_subscription_id: str
-    azure_resource_group: str
+        # Microsoft AI Foundry project endpoint URL
+        self.AIPROJECT_CONNECTION_STRING: str = os.environ["AIPROJECT_CONNECTION_STRING"]
 
+        # Name of the deployed model in Foundry (e.g. "gpt-4o")
+        self.MODEL_DEPLOYMENT_NAME: str = os.environ["MODEL_DEPLOYMENT_NAME"]
 
-def load_config() -> Config:
-    """
-    Load and validate all required environment variables.
-    Raises a clear error if any required variable is missing.
-    """
-    required = {
-        "AIPROJECT_CONNECTION_STRING": "Your Foundry project connection string",
-        "MODEL_DEPLOYMENT_NAME": "The name of your deployed model (e.g. gpt-4o)",
-        "AZURE_SUBSCRIPTION_ID": "Your Azure subscription ID",
-        "AZURE_RESOURCE_GROUP": "Your Azure resource group name",
-    }
+        # Azure subscription details (used by Deployment Engineer agent)
+        self.AZURE_SUBSCRIPTION_ID: str = os.environ["AZURE_SUBSCRIPTION_ID"]
+        self.AZURE_RESOURCE_GROUP: str = os.environ["AZURE_RESOURCE_GROUP"]
 
-    missing = [key for key in required if not os.getenv(key)]
-    if missing:
-        lines = "\n".join(
-            f"  - {key}: {required[key]}" for key in missing
+        # Directory where agent outputs are saved
+        self.OUTPUTS_DIR: str = str(
+            Path(__file__).parent.parent / "outputs"
         )
-        raise EnvironmentError(
-            f"\n\nMissing required environment variables:\n{lines}\n\n"
-            "Copy ai_devteam/.env.example to ai_devteam/.env and fill in your values."
+
+    def __repr__(self) -> str:
+        return (
+            f"Config("
+            f"endpoint={self.AIPROJECT_CONNECTION_STRING[:40]}..., "
+            f"model={self.MODEL_DEPLOYMENT_NAME}, "
+            f"subscription={self.AZURE_SUBSCRIPTION_ID[:8]}...)"
         )
 
-    return Config(
-        connection_string=os.environ["AIPROJECT_CONNECTION_STRING"],
-        model_deployment_name=os.environ["MODEL_DEPLOYMENT_NAME"],
-        azure_subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"],
-        azure_resource_group=os.environ["AZURE_RESOURCE_GROUP"],
-    )
+
+# Singleton — import this everywhere: from shared.config import config
+config = Config()
