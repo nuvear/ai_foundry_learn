@@ -182,6 +182,22 @@ class OrchestratorPM(ProjectManagerAgent):
             self._workspace.save_agent_output(current_key, response.content)
             print(f"  ✅ {step['label']} completed ({response.duration_seconds:.1f}s)")
 
+            # ── Local deployment: extract code and start server ────────────────
+            if current_key == "deployment_engineer":
+                developer_output = self._workspace.read_agent_output("developer") or ""
+                deploy_result = agent.deploy_local(
+                    workspace=self._workspace,
+                    developer_output=developer_output,
+                )
+                if deploy_result["success"]:
+                    self._state["live_url"] = deploy_result["url"]
+                    self._state["server_pid"] = deploy_result["pid"]
+                    print(f"  🌐 Local server started → {deploy_result['url']}")
+                else:
+                    self._state["live_url"] = None
+                    print(f"  ⚠️  Local server could not start: {deploy_result['error']}")
+                self._save_state()
+
             # Parse the verdict
             verdict = parse_verdict(response.content)
 
@@ -331,6 +347,7 @@ class OrchestratorPM(ProjectManagerAgent):
         Build the input for an agent.
         If the agent has pending feedback (e.g. bug reports from Tester),
         that feedback is injected as an additional context section.
+        For the UAT Validator, the live server URL is also injected if available.
         """
         parts = [f"## Original Requirement\n{requirement}"]
 
@@ -339,6 +356,25 @@ class OrchestratorPM(ProjectManagerAgent):
             if prior_output:
                 label = STEP_MAP[agent_key_ctx]["label"]
                 parts.append(f"## {label} Output\n{prior_output}")
+
+        # Inject live server URL for UAT Validator
+        if agent_key == "uat_validator":
+            live_url = self._state.get("live_url")
+            if live_url:
+                parts.append(
+                    f"## Live Server\n"
+                    f"The application is running locally at: **{live_url}**\n"
+                    f"Swagger UI: {live_url}/docs\n"
+                    f"Health check: {live_url}/health\n\n"
+                    f"You MUST include the live URL in your UAT report and note that "
+                    f"the server is running and accessible."
+                )
+            else:
+                parts.append(
+                    "## Live Server\n"
+                    "Note: The local server could not be started automatically. "
+                    "UAT validation is based on code review only."
+                )
 
         base_input = "\n\n---\n\n".join(parts)
         return self._inject_feedback(agent_key, base_input)
@@ -465,6 +501,7 @@ class OrchestratorPM(ProjectManagerAgent):
 
     def _print_delivery_report(self) -> None:
         loops = self._state["loops"]
+        live_url = self._state.get("live_url")
         print("\n" + "=" * 62)
         print("  ✅  DELIVERY COMPLETE")
         print("=" * 62)
@@ -475,4 +512,12 @@ class OrchestratorPM(ProjectManagerAgent):
                 print(f"    • Loop {loop['iteration']}: "
                       f"{loop['trigger']} → {loop['routed_to']} "
                       f"({loop['verdict']})")
+        if live_url:
+            print(f"\n  🌐 Live Server  : {live_url}")
+            print(f"  📖 Swagger UI   : {live_url}/docs")
+            print(f"  🏥 Health Check : {live_url}/health")
+            print(f"\n  The server is running in the background.")
+            print(f"  To stop it, kill the process or close this terminal.")
+        else:
+            print(f"\n  ⚠️  Local server was not started (see deployment log).")
         print(f"\n  All agents completed. Review the workspace for deliverables.\n")
