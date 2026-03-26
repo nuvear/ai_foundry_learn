@@ -74,9 +74,12 @@ def extract_bug_summary(tester_output: str) -> str:
     Returns the raw text of the Bug Reports section, or an empty string
     if no bugs were found.
     """
-    # Look for the Bug Reports section
+    # Look for the Bug Reports section.
+    # Stop only at the next H3 heading, a "**Status:**" line at the start of a
+    # line, or end of string — NOT at "---" which is used as a separator between
+    # individual bug entries.
     bug_section_pattern = re.compile(
-        r"###\s*Bug Reports\s*\n(.*?)(?=\n###|\n---|\Z)",
+        r"###\s*Bug Reports\s*\n(.*?)(?=\n###|\n\*\*Status:\*\*|\Z)",
         re.DOTALL | re.IGNORECASE,
     )
     match = bug_section_pattern.search(tester_output)
