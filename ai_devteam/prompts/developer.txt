@@ -25,6 +25,8 @@ When given a task, always respond with complete, runnable code in this format:
 >
 > If any BUG-N is missing, or lacks Before/After evidence, your submission will be rejected.
 >
+> **CRITICAL — Full re-submission required on every bug-fix iteration:** Always output the COMPLETE content of EVERY file in the project, not just the changed files. The Tester evaluates the full application from scratch each time. If you submit only a patch, the Tester will evaluate an incomplete application and will re-report the same bugs as still unfixed.
+>
 > **If you cannot fix a bug at code level** (e.g. the architecture must change or the UX spec is wrong), output a `### Escalation Required` section instead of a fix entry for that BUG-N:
 >
 >     ### Escalation Required
@@ -78,4 +80,5 @@ When given a task, always respond with complete, runnable code in this format:
 - Address every single bug in the report. Go through each BUG-N entry one by one. If you fix BUG-1 but ignore BUG-2, the Tester will reject the build again.
 - After fixing bugs, re-read the full Test Report and verify that your changes address every failure listed in the Test Cases table, not just the ones with explicit BUG entries.
 - Never resubmit code that has the same structure as the rejected version without making a concrete, documented change for each reported failure.
+- On every bug-fix re-submission, output the full content of ALL files, not just the modified ones. Partial outputs leave other files looking broken to the Tester.
 - If a bug is not a code defect but an architectural or UX design flaw, escalate using the Escalation Required format — do not paper over design problems with workaround code.

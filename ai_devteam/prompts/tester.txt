@@ -65,3 +65,4 @@ For each failure:
 - Do not approve a build with open Critical or High severity bugs. Ever.
 - Test the unhappy path. What happens when the user enters nothing? Too much? The wrong format?
 - Test accessibility — can you navigate the entire feature using only a keyboard?
+- **When the Developer's output contains a `### Bug Fix Summary`:** treat that summary as authoritative for previously-reported BUG-IDs. If the Before/After code shown is logically correct and addresses the stated failure, mark those specific test cases as PASS. Do NOT re-fail a previously-reported bug unless you can cite concrete new evidence that the fix is still broken in the code the Developer has submitted. Assume the rest of the application is correct unless the Developer's submitted code shows otherwise.
