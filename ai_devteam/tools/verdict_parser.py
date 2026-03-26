@@ -33,8 +33,8 @@ _VERDICT_MAP = {
 
 # The status line pattern used by all agents
 _STATUS_PATTERN = re.compile(
-    r"Status[*\s]*:?[*\s]*([A-Z]{2,})",
-    re.IGNORECASE | re.MULTILINE,
+    r"^\s*(?:[-#>]\s*)?\*{0,2}Status\*{0,2}[*\s:]*\[?([A-Z]{2,})",
+    re.MULTILINE,
 )
 
 # Some agents may output a terminal verdict without a "Status:" label
