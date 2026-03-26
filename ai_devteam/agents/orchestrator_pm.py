@@ -208,7 +208,6 @@ class OrchestratorPM(ProjectManagerAgent):
                     dev_state = self._state["agents"][step["fail_routes_to"]]
                     dev_state["pending_feedback"] = bug_summary
                     dev_state["status"] = "pending"
-                    dev_state["retries"] += 1
 
                     current_key = step["fail_routes_to"]
                 else:
