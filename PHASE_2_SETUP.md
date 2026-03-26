@@ -3,7 +3,13 @@
 **Project:** AI DevTeam  
 **Phase:** 2 of 5  
 **Prerequisite:** Phase 1 complete — Azure connected, GPT-4o responding  
-**Language:** Python 3.9+
+**Language:** Python 3.9+  
+**Last Updated:** March 2026
+
+---
+
+> **SDK Compatibility Note**
+> This phase uses **azure-ai-projects v2.0+**. In SDK v2.0, the `client.inference` attribute was removed. All chat completions now go through `client.get_openai_client()`, which returns a standard OpenAI-compatible client. The code in this repository already reflects this. If you see `AttributeError: 'AIProjectClient' object has no attribute 'inference'`, pull the latest code and the fix is already applied.
 
 ---
 
@@ -54,6 +60,8 @@ ai_devteam/
 
 ## Step 1 — Pull the Latest Code
 
+Always pull before starting a new phase to get the latest fixes:
+
 ```bash
 cd ~/ai_foundry_learn
 git pull
@@ -68,14 +76,13 @@ cd ai_devteam
 source .venv/bin/activate
 ```
 
-Your prompt should show `(.venv)` at the start.
+Your prompt should show `(.venv)` at the start. If it does not, make sure you are in the `ai_devteam` directory.
 
 ---
 
 ## Step 3 — Install New Dependencies
 
-Phase 2 uses the same packages as Phase 1. No new installs required.
-Verify everything is still installed:
+Phase 2 uses the same packages as Phase 1. No new installs required. Verify everything is still installed:
 
 ```bash
 pip install -r requirements.txt
@@ -120,26 +127,26 @@ The PM will respond with a structured **Project Charter** including scope, deliv
 
 ---
 
-## Step 6 — Try Each Agent
+## Step 6 — Try Each Agent in Sequence
 
-Work through the pipeline manually, passing the output of one agent as input to the next.
+Work through the pipeline manually, passing the output of one agent as input to the next. This is how you will understand what each agent does before we automate the handoffs in Phase 4.
 
-**Business Analyst** (give it the same requirement):
+**Business Analyst** — give it the same requirement:
 ```bash
 python run_agent.py --agent ba --input "Build a simple todo list web app where users can add, complete, and delete tasks"
 ```
 
-**UI/UX Designer** (give it the BA's User Stories):
+**UI/UX Designer** — give it the BA's User Stories:
 ```bash
 python run_agent.py --agent ux --input "We are building a todo list app. User stories: US-1: As a user, I want to add a task so I can track my work. US-2: As a user, I want to mark a task complete. US-3: As a user, I want to delete a task."
 ```
 
-**Architect** (give it the FRD summary):
+**Architect** — give it the FRD summary:
 ```bash
 python run_agent.py --agent architect --input "Build a todo list web app. Frontend: React. Backend: FastAPI. Database: SQLite for local dev. Single user, no auth required for MVP."
 ```
 
-**Developer** (give it the HLD):
+**Developer** — give it the HLD:
 ```bash
 python run_agent.py --agent developer --input "Implement a FastAPI backend with endpoints: GET /tasks, POST /tasks, PATCH /tasks/{id}/complete, DELETE /tasks/{id}. Use SQLite with SQLAlchemy. Return JSON."
 ```
@@ -150,20 +157,39 @@ python run_agent.py --agent developer --input "Implement a FastAPI backend with 
 
 ### How BaseAgent Works
 
-Every agent follows the same pattern:
+Every agent follows the same pattern. Understanding this pattern is the most important thing you learn in Phase 2:
 
 ```
 1. Load system prompt from prompts/<role>.txt
 2. Connect to Foundry using DefaultAzureCredential (keyless auth)
-3. Build messages: [SystemMessage] + [history] + [UserMessage]
-4. Call the model via chat completions
-5. Save the response to outputs/<role>/<timestamp>.json
-6. Return an AgentResponse object
+3. Get an OpenAI-compatible client via client.get_openai_client()
+4. Build messages: [SystemMessage] + [history] + [UserMessage]
+5. Call the model via openai_client.chat.completions.create()
+6. Save the response to outputs/<role>/<timestamp>.json
+7. Return an AgentResponse object
 ```
+
+### The SDK v2.0 API Change Explained
+
+In SDK v1.x, the pattern was:
+```python
+# OLD — no longer works in v2.0
+chat_client = client.inference.get_chat_completions_client()
+response = chat_client.complete(model=..., messages=...)
+```
+
+In SDK v2.0+, the correct pattern is:
+```python
+# NEW — correct for v2.0+
+openai_client = client.get_openai_client()
+response = openai_client.chat.completions.create(model=..., messages=...)
+```
+
+The new approach uses the standard OpenAI Python SDK interface, which means any code written for the OpenAI API works directly with Azure AI Foundry — a significant improvement for portability.
 
 ### Why Different Temperatures?
 
-Each agent uses a different `temperature` setting:
+Each agent uses a different `temperature` setting, which controls how creative vs. deterministic the model's responses are:
 
 | Agent | Temperature | Why |
 | :--- | :--- | :--- |
@@ -191,19 +217,21 @@ This gives you a full audit trail of every agent's work — useful for debugging
 
 | Error | Cause | Fix |
 | :--- | :--- | :--- |
+| `AttributeError: 'AIProjectClient' object has no attribute 'inference'` | SDK v2.0 breaking change | Run `git pull` — the fix is already in the repository |
 | `ModuleNotFoundError: No module named 'agents'` | Not running from the `ai_devteam/` directory | `cd ~/ai_foundry_learn/ai_devteam` then retry |
 | `EnvironmentError: Missing required environment variables` | `.env` file not found or incomplete | Check `.env` exists and all 4 variables are set |
 | `DefaultAzureCredential: No credential found` | Not logged in to Azure CLI | Run `az login` |
-| `ResourceNotFoundError` | Model deployment name is wrong | Check the exact name in the Foundry portal |
+| `ResourceNotFoundError` | Model deployment name is wrong | Check the exact deployment name in the Foundry portal under **Models + endpoints** |
 | `AuthenticationError` | Token expired | Run `az login` again |
+| `NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+` | macOS ships with LibreSSL, not OpenSSL | This is a **warning only** — it does not affect functionality. You can safely ignore it. |
 
 ---
 
 ## What You Learned in Phase 2
 
-By completing this phase, you have learned:
+By completing this phase, you have learned the following Microsoft AI Foundry and Python agent concepts:
 
-**Foundry SDK patterns** — how `AIProjectClient` and `get_chat_completions_client()` work together to call a deployed model.
+**Foundry SDK v2.0 patterns** — how `AIProjectClient` and `get_openai_client()` work together to call a deployed model using the standard OpenAI interface.
 
 **System prompt engineering** — how a well-crafted system prompt defines an agent's role, output format, and decision-making principles. The difference between a generic chatbot and a specialist agent is almost entirely in the system prompt.
 
@@ -211,7 +239,9 @@ By completing this phase, you have learned:
 
 **Conversation history** — how multi-turn conversations work: each call appends to a history list, and the full history is sent with every new message so the agent remembers context.
 
-**Temperature as a design decision** — lower temperature = more deterministic and consistent; higher temperature = more creative and varied. Different tasks need different settings.
+**Temperature as a design decision** — lower temperature produces more deterministic and consistent output; higher temperature produces more creative and varied output. Different tasks need different settings.
+
+**Keyless authentication** — `DefaultAzureCredential` automatically uses your `az login` session. No API keys are stored anywhere in the code or `.env` file.
 
 ---
 
