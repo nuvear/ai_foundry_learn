@@ -206,7 +206,14 @@ class OrchestratorPM(ProjectManagerAgent):
                 if current_key == "developer":
                     agent_state["pending_feedback"] = None
 
-                current_key = step["routes_to"]
+                # If this agent was called as a peer escalation target, resume
+                # the waiting agent (e.g. developer) with the new guidance.
+                if current_key in self._state.get("pending_resume", {}):
+                    resume_key = self._state["pending_resume"].pop(current_key)
+                    print(f"  ↩  Resuming {STEP_MAP[resume_key]['label']} with updated {step['label']} guidance...")
+                    current_key = resume_key
+                else:
+                    current_key = step["routes_to"]
 
             elif verdict in ("FAIL", "REJECTED"):
                 # Record the failure and decide where to route
@@ -226,13 +233,25 @@ class OrchestratorPM(ProjectManagerAgent):
 
                     current_key = step["fail_routes_to"]
                 else:
-                    if agent_state["retries"] < self.max_retries:
-                        agent_state["retries"] += 1  # increment before printing so the count is accurate
-                        print(f"  ↩  Retrying {step['label']} (attempt {agent_state['retries']}/{self.max_retries})...")
-                        # current_key stays the same — loop will re-run this agent
+                    # Check if Developer is signalling it needs help from Architect or UX.
+                    escalation_target = (
+                        self._detect_developer_escalation(response.content)
+                        if current_key == "developer" else None
+                    )
+                    pending_resume = self._state.get("pending_resume", {})
+                    if escalation_target and escalation_target not in pending_resume:
+                        print(f"  🏗️  Developer escalating to {STEP_MAP[escalation_target]['label']} for guidance...")
+                        self._record_loop(current_key, verdict, escalation_target)
+                        self._state.setdefault("pending_resume", {})[escalation_target] = current_key
+                        agent_state["retries"] -= 1  # escalation does not count as a retry
+                        current_key = escalation_target
                     else:
-                        self._escalate(current_key, agent_state)
-                    break
+                        if agent_state["retries"] < self.max_retries:
+                            print(f"  ↩  Retrying {step['label']} (attempt {agent_state['retries']}/{self.max_retries})...")
+                            # current_key stays the same — loop will re-run this agent
+                        else:
+                            self._escalate(current_key, agent_state)
+                        break
 
             # Persist state after every decision
             self._save_state()
@@ -261,6 +280,7 @@ class OrchestratorPM(ProjectManagerAgent):
                 for key in AGENT_KEYS
             },
             "loops": [],
+            "pending_resume": {},
         }
         self._save_state()
 
@@ -313,17 +333,61 @@ class OrchestratorPM(ProjectManagerAgent):
 
     def _developer_acknowledged_feedback(self, developer_output: str, pending_feedback: str) -> bool:
         """
-        Ensure Developer acknowledges every pending BUG ID before pass-through.
+        Ensure Developer explicitly acknowledges every pending BUG ID with:
+          1. BUG-ID present in Bug Fix Summary (IDs normalised: BUG-01 == BUG-1)
+          2. Before/After code evidence in the output
+          3. At least one code block present
         """
-        required_bug_ids = set(re.findall(r"BUG-\d+", pending_feedback, flags=re.IGNORECASE))
+        def _norm(bug_id: str) -> str:
+            m = re.match(r"BUG-0*(\d+)", bug_id, re.IGNORECASE)
+            return f"BUG-{int(m.group(1))}" if m else bug_id.upper()
+
+        required_bug_ids = {_norm(b) for b in re.findall(r"BUG-\d+", pending_feedback, re.IGNORECASE)}
         if not required_bug_ids:
             return True
 
-        output_bug_ids = set(re.findall(r"BUG-\d+", developer_output, flags=re.IGNORECASE))
+        output_bug_ids = {_norm(b) for b in re.findall(r"BUG-\d+", developer_output, re.IGNORECASE)}
         if not required_bug_ids.issubset(output_bug_ids):
             return False
 
-        return "bug fix summary" in developer_output.lower()
+        if "bug fix summary" not in developer_output.lower():
+            return False
+
+        # Require explicit Before/After evidence somewhere in the output.
+        if not re.search(r"\bBefore\b.{0,600}\bAfter\b", developer_output, re.DOTALL | re.IGNORECASE):
+            return False
+
+        # Require at least one fenced code block.
+        if not re.search(r"```", developer_output):
+            return False
+
+        return True
+
+    def _detect_developer_escalation(self, developer_output: str) -> Optional[str]:
+        """
+        Detect if Developer is signalling it cannot fix bugs without help
+        from Architect or UX Designer.
+        Returns the agent key ('architect' or 'ux_designer'), or None.
+        """
+        lower = developer_output.lower()
+        arch_signals = [
+            r"architecture issue", r"architectural issue", r"architectural constraint",
+            r"requires architect", r"architect must", r"cannot implement without architect",
+            r"needs architect", r"target agent.*architect",
+        ]
+        ux_signals = [
+            r"ux issue", r"ui issue", r"ux constraint",
+            r"requires ux", r"requires ui/ux", r"ux designer must",
+            r"cannot implement without ux", r"needs ux designer",
+            r"target agent.*ui/ux", r"target agent.*ux",
+        ]
+        for signal in arch_signals:
+            if re.search(signal, lower):
+                return "architect"
+        for signal in ux_signals:
+            if re.search(signal, lower):
+                return "ux_designer"
+        return None
 
     # ── Output helpers ────────────────────────────────────────────────────────
 
