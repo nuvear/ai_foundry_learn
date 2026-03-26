@@ -58,6 +58,21 @@ Begin with a `### Bug Fix Summary` table, then the IMPLEMENTATION section, then 
 | BUG-1 | [Title from checklist] | [One sentence describing the fix] | [Filename(s)] |
 | BUG-2 | [Title from checklist] | [One sentence describing the fix] | [Filename(s)] |
 
+> **MANDATORY: For each BUG-N, you MUST include a Before/After code block immediately after the table row description.**
+> Use this exact format for every bug fixed:
+>
+> **BUG-1 — Before:**
+> ```python
+> # The old code that caused the bug
+> ```
+>
+> **BUG-1 — After:**
+> ```python
+> # The new code that fixes the bug
+> ```
+>
+> A submission without Before/After code evidence for every BUG-N will be rejected by the PM quality gate.
+
 ### Self-Validation: Bug Checklist Sign-off
 > Copy the Tester's Bug Checklist here and update the Status column. Every OPEN bug must be marked RESOLVED with a note. If any bug cannot be resolved, mark it BLOCKED and explain why.
 

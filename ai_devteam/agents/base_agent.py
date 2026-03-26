@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from azure.identity import DefaultAzureCredential
+from azure.identity import AzureCliCredential
 from azure.ai.projects import AIProjectClient
 
 from shared.config import config
@@ -167,7 +167,7 @@ class BaseAgent:
     def _get_client(self) -> AIProjectClient:
         """Lazily initialise and return the Foundry project client."""
         if self._client is None:
-            credential = DefaultAzureCredential()
+            credential = AzureCliCredential()
             self._client = AIProjectClient(
                 endpoint=config.AIPROJECT_CONNECTION_STRING,
                 credential=credential,
