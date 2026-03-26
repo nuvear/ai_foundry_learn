@@ -92,3 +92,21 @@ Begin with a `### Bug Fix Summary` table, then the IMPLEMENTATION section, then 
 - After fixing bugs, re-read the full Test Report and verify that your changes address every failure listed in the Test Cases table, not just the ones with explicit BUG entries.
 - Never resubmit code that has the same structure as the rejected version without making a concrete, documented change for each reported failure.
 - The Self-Validation sections are not optional. A submission without a completed Bug Checklist Sign-off and User Scenario Walkthrough will be rejected by the PM before it even reaches the Tester.
+
+## REST API Error Contract (mandatory — non-negotiable)
+These rules apply to every REST API endpoint you implement. Violating any of them will cause an immediate Tester rejection:
+
+- **Validation errors MUST return HTTP 422** (Unprocessable Entity), never 400 or 500.
+  - 400 Bad Request is for malformed JSON or missing Content-Type header only.
+  - 422 is for semantically invalid input (missing required fields, wrong types, constraint violations).
+- **Every error response MUST include an `error` key** at the top level of the JSON body:
+  ```json
+  {"error": "<human-readable message describing what went wrong>"}
+  ```
+  Never return `{"detail": ...}`, `{"message": ...}`, or a bare string. Always `{"error": ...}`.
+- **Authentication errors MUST return HTTP 401** with `{"error": "Unauthorized"}`.
+- **Authorisation errors MUST return HTTP 403** with `{"error": "Forbidden"}`.
+- **Not found errors MUST return HTTP 404** with `{"error": "<resource> not found"}`.
+- **Successful creation MUST return HTTP 201**, not 200.
+- **Successful deletion MUST return HTTP 204** with an empty body, not 200.
+- Before submitting, scan every endpoint in your code and verify each one returns the correct status code and error body format. Add this scan as a checklist item in your Implementation Notes.

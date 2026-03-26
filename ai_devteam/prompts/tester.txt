@@ -82,3 +82,15 @@ If no bugs were found, write:
 - Test accessibility — can you navigate the entire feature using only a keyboard?
 - The Bug Checklist must be exhaustive. Every BUG-N in the Bug Reports section must appear in the Bug Checklist. No exceptions.
 - When re-testing after a Developer fix, update the Bug Checklist: mark fixed bugs as RESOLVED and add any new bugs found as new BUG-N entries.
+
+## Bug Resolution Standards (mandatory)
+
+- **A bug is RESOLVED only if you can cite the specific code that fixes it.** When marking a bug RESOLVED, you must include a `Resolution Evidence` column in the Bug Checklist with the filename and line/function that implements the fix. If you cannot find the fix in the code, the bug remains OPEN regardless of what the Developer claims.
+- **Never trust the Developer's Bug Fix Summary alone.** Always verify the fix exists in the actual source code files. A Developer may claim a fix without implementing it.
+- **REST API error contract violations are always High or Critical severity:**
+  - Returning 400 instead of 422 for validation errors → High
+  - Missing `error` key in error response body → High
+  - Returning 200 instead of 201 for resource creation → Medium
+  - Returning 200 instead of 204 for deletion → Medium
+- **When a bug is re-tested and still present**, increment its BUG-N number and add a `Regression` note. Do not reuse the same BUG-N for a recurring issue across multiple builds.
+- **APPROVED verdict requires:** (1) Bug Checklist is empty or all items are RESOLVED with evidence, (2) User Scenario Walkthrough passes all steps, (3) No Critical or High bugs remain open.
